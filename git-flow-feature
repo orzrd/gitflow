@@ -180,6 +180,8 @@ parse_args() {
 	# read arguments into global variables
 	NAME=$1
 	BRANCH=$PREFIX$NAME
+    test `expr match "$@" "qq_"` -ne 0 && MASTER_BRANCH="$MASTER_BRANCH"_qq &&
+    DEVELOP_BRANCH="$DEVELOP_BRANCH"_qq
 }
 
 parse_remote_name() {
@@ -191,6 +193,18 @@ parse_remote_name() {
 	REMOTE=$1
 	NAME=$2
 	BRANCH=$PREFIX$NAME
+}
+cmd_delete() {
+    if [ "$1" = "" ]; then
+        local feature_branches=$(echo "$(git_local_branches)" | grep "^$PREFIX")
+        test "$feature_branches" = "" && die "There has not existing hotfix branch can delete" && exit 1
+    else
+        test $# != 1 && die "There only need one parameter indicates the branch to be deleted" && exit 1
+        feature_branches="$1"
+    fi
+    test "$feature_branches" = "$(git_current_branch)" && echo 'First checkout develp branch'; git_do checkout "$DEVELOP_BRANCH"
+    git branch -D  ${feature_branches} > /dev/null 2>&1&& echo 'Delete Successed'|| die "Did not find branch: [$hotfix_branches]"
+
 }
 
 cmd_start() {
